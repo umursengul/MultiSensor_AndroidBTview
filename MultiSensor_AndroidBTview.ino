@@ -17,8 +17,6 @@
 int rainSensor = 3;
 int lightSensor = A5;
 
-boolean isRaining = false;
-boolean isDark = true;
 int windSpeed = 0;
 int pressure = 0;
 dht11 DHT11;
@@ -72,26 +70,25 @@ void loop()
   // Rain
   if(digitalRead(rainSensor == HIGH))
   {
-    isRaining = !isRaining;
-    Serial.print(isRaining);
+    Serial.print(400);
     Serial.print(",");
   }
   else if(digitalRead(rainSensor == LOW))
   {
-    Serial.print(isRaining);
+    Serial.print(500);
     Serial.print(",");
   }
 
   // Light
   if(analogRead(lightSensor >= 500))
   {
-    isDark = !isDark;
-    Serial.print(isDark);
+    Serial.print(700);
     Serial.println(",");
   }
   else if(analogRead(lightSensor < 500))
   {
-    Serial.print(isDark);
+    Serial.print(600);
     Serial.println(",");
   }
+  delay(2000);
 }
