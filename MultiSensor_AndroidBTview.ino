@@ -30,17 +30,36 @@ void setup()
 
 void loop()
 {
-  // DHT11 values
+  /////////////
+  //  DHT11  //
+  /////////////
   int chk = DHT11.read(DHT11PIN); // Sensor check - should be 0
+
+  // Temperature in Celcius:
   //Serial.print("Sicaklik (Celcius): ");       // DEBUGGING
-  Serial.print((float)DHT11.temperature, 2);  // Send temperature in Celcius
+  Serial.print((float)DHT11.temperature, 2);
   Serial.print(",");                          // CSV
+
+  // Temperature in Fahrenheit:
+  //Serial.print("Sicaklik (Fahrenheit): ");    // DEBUGGING
+  //Serial.print(DHT11.fahrenheit(), 2);
+  //Serial.print(",");
+
+  // Temperature in Kelvin:
+  //Serial.print("Sicaklik (Kelvin): ");        // DEBUGGING
+  //Serial.print(DHT11.kelvin(), 2);
+  //Serial.print(",");
+
+  // Send humidity:
   //Serial.print("Nem (%): ");                  // DEBUGGING
-  Serial.print((float)DHT11.humidity, 2);     // Send humidity
+  Serial.print((float)DHT11.humidity, 2);
   Serial.print(",");                          // CSV
-  // Dew Point
+
+  // Dew Point:
   //Serial.print("Cig Olusma Noktasi: ");       // DEBUGGING
   Serial.println(DHT11.dewPoint(), 2);        // Send dew point
+  Serial.print(",");
+
   /*
   sensorValue = analogRead(analogInPin);
   outputValue = map(sensorValue, 0, 1023, 0, 100);
