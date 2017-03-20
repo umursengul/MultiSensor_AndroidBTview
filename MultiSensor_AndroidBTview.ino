@@ -11,20 +11,22 @@
 /////////////////////
 //  SENSOR PINS   //
 /////////////////////
-const int analogInPin = A5;
-const int analogOutPin = 9;
+//const int analogInPin = A5;
+//const int analogOutPin = 9;
 #define DHT11PIN 2
+int rainSensor = 3;
+int lightSensor = A5;
 
-int sensorValue = 0;
-int outputValue = 0;
-int outputValue2 = 0;
-int outputValue3 = 0;
-int outputValue4 = 0;
-
+boolean isRaining = false;
+boolean isDark = true;
+int windSpeed = 0;
+int pressure = 0;
 dht11 DHT11;
 
 void setup()
 {
+  pinMode(rainSensor, INPUT);
+  pinMode(lightSensor, INPUT);
   Serial.begin(9600);
 }
 
@@ -57,30 +59,39 @@ void loop()
 
   // Dew Point:
   //Serial.print("Cig Olusma Noktasi: ");       // DEBUGGING
-  Serial.println(DHT11.dewPoint(), 2);        // Send dew point
+  //Serial.println(DHT11.dewPoint(), 2);        // Send dew point
+  //Serial.print(",");
+
+  // Wind speed
+  Serial.print(windSpeed);
   Serial.print(",");
 
-  /*
-  sensorValue = analogRead(analogInPin);
-  outputValue = map(sensorValue, 0, 1023, 0, 100);
-  outputValue2 = map(sensorValue, 0, 1023, 200, 300);
-  outputValue3 = map(sensorValue, 0, 1023, 400, 500);
-  outputValue4 = map(sensorValue, 0, 1023, 600, 700);
-  //analogWrite(analogOutPin, outputValue);
-  //Serial.print(0);
-  Serial.print(outputValue);
+  // Pressure
+  Serial.print(pressure);
   Serial.print(",");
-  Serial.print(outputValue2);
-  Serial.print(",");
-  Serial.print(outputValue3);
-  Serial.print(",");
-  Serial.print(outputValue4);
-  Serial.print(",");
-  Serial.print(0);
-  Serial.print(",");
-  Serial.print("LIGHT");
-  Serial.println(",");
-  //Serial.println(';');
-  delay(1000);
-  */
+  // Rain
+  if(digitalRead(rainSensor == HIGH))
+  {
+    isRaining = !isRaining;
+    Serial.print(isRaining);
+    Serial.print(",");
+  }
+  else if(digitalRead(rainSensor == LOW))
+  {
+    Serial.print(isRaining);
+    Serial.print(",");
+  }
+
+  // Light
+  if(analogRead(lightSensor >= 500))
+  {
+    isDark = !isDark;
+    Serial.print(isDark);
+    Serial.println(",");
+  }
+  else if(analogRead(lightSensor < 500))
+  {
+    Serial.print(isDark);
+    Serial.println(",");
+  }
 }
