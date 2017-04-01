@@ -41,7 +41,7 @@ void setup()
   /////////////////
   pinMode(rainSensor, INPUT);
   pinMode(lightSensor, INPUT);
-  
+
   //////////////////
   //  BMP180 INIT //
   //////////////////
@@ -55,7 +55,7 @@ void setup()
   // circumference ~= 11cm
   circumference = 11;
   pinMode(REED, INPUT);
-  
+
   ////////////////////
   //  SERIAL COMM   //
   ////////////////////
@@ -80,7 +80,7 @@ void loop()
   Serial.print(DHT11.fahrenheit(), 2);        // DEBUGGING
   Serial.print(",");                          // DEBUGGING
   */
-  
+
   // Temperature in Kelvin:
   /*
   Serial.print("Sicaklik (Kelvin): ");        // DEBUGGING
@@ -101,7 +101,7 @@ void loop()
   ///////////////////
   //  WIND SENSOR  //
   ///////////////////
-  start = millis();
+  /*start = millis();
   for(int counter = 0; counter <= 1000; counter++)
   {
     if (REED == HIGH)
@@ -110,7 +110,7 @@ void loop()
     }
   }
   finished = millis();
-  
+
   if(reedCounter =! 0)
   {
     elapsed = finished - start;
@@ -125,7 +125,7 @@ void loop()
     Serial.print(windSpeed);
     Serial.print(",");
     reedCounter = 0;
-  }
+  }*/
 
   //////////////////////
   //  PRESSURE SENSOR //
@@ -137,7 +137,7 @@ void loop()
   {
     // Wait for the measurement to complete:
     delay(status);
-    
+
     // Temperature measurement:
     status = pressure.getTemperature(T);
     if (status != 0)
@@ -157,7 +157,7 @@ void loop()
       {
         // Wait for the measurement to complete:
         delay(status);
-        
+
         // Pressure measurement:
         status = pressure.getPressure(P,T);
         if (status != 0)
@@ -193,7 +193,7 @@ void loop()
       }
     }
   }
-  
+
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
