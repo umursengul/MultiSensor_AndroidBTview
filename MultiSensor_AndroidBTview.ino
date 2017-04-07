@@ -8,25 +8,26 @@
 #include <dht11.h>
 #include <SFE_BMP180.h>
 #include <Wire.h>
-#include<stdlib.h>
+#include <stdlib.h>
 
 ////////////////////
 //  SENSOR PINS   //
 ////////////////////
-#define DHT11PIN 2
+#define DHT11PIN 4
 #define REED A4
 int rainSensor = 3;
 int lightSensor = A5;
+#define P_INT 2
 
 ////////////////////
 //  DEFINED VARs  //
 ////////////////////
 float windSpeed = 0;
+#define ANEMOMETER_DATA_COUNT 10
+unsigned long anemometerData[ANEMOMETER_DATA_COUNT] = { 0 };
+void onInterrupt();
 static char outstr[15];
-static char outstr2[15];
-static char outstr3[15];
-static char outstr4[15];
-static char outstr5[15];
+String tempStr;
 String temperatureSensorValue;
 String pressureSensorValue;
 String humiditySensorValue;
@@ -34,19 +35,6 @@ String lightSensorValue;
 String windSensorValue;
 String rainSensorValue;
 String sensorValues;
-/*
-long timer;
-float radius = 1.75;
-int circumference;
-int reedCounter = 0;
-unsigned long start = 0;
-unsigned long finished = 0;
-unsigned long elapsed = 0;
-*/
-int time_span=0;
-int previous_time=0;
-int new_time=0;
-float velocity;
 dht11 DHT11;
 SFE_BMP180 pressure;
 #define ALTITUDE 938.0  // Average altitude of Ankara in meters
@@ -65,14 +53,12 @@ void setup()
   //////////////////
   //pressure.begin();
 
-  ////////////////////
-  //  WIND SENSOR   //
-  ////////////////////
-  // v_max = 100kph ~= 2778cm/s
+  ////////////////////////
+  //  WIND SENSOR INIT  //
+  ////////////////////////
   // r_sensor ~= 1.75cm
   // circumference ~= 11cm
-  //circumference = 11;
-  pinMode(REED, INPUT);
+  attachInterrupt(digitalPinToInterrupt(P_INT), onInterrupt, RISING);
 
   ////////////////////
   //  SERIAL COMM   //
@@ -90,13 +76,9 @@ void loop()
   // Temperature in Celcius:
   //Serial.print("Sicaklik (Celcius): ");       // DEBUGGING
   float x = DHT11.temperature;
-  dtostrf(x,4,2,outstr2);
-  //Serial.print((float)DHT11.temperature, 2);
-  //Serial.print(",");                          // CSV
-  String strThree = outstr2;
-  //Serial.println(strThree);
-  temperatureSensorValue = strThree + ",";
-  //Serial.println(temperatureSensorValue);
+  dtostrf(x,4,2,outstr);
+  tempStr = outstr;
+  temperatureSensorValue = tempStr + ",";
 
   // Temperature in Fahrenheit:
   /*
@@ -115,13 +97,9 @@ void loop()
   // Send humidity:
   //Serial.print("Nem (%): ");                  // DEBUGGING
   float y = DHT11.humidity;
-  dtostrf(y,4,2,outstr3);
-  String strFour = outstr3;
-  //Serial.println(strFour);
-  humiditySensorValue = strFour + ",";
-  //Serial.println(humiditySensorValue);
-  //Serial.print((float)DHT11.humidity, 2);
-  //Serial.print(",");                          // CSV
+  dtostrf(y,4,2,outstr);
+  tempStr = outstr;
+  humiditySensorValue = tempStr + ",";
 
   // Send dew point:
   //Serial.print("Cig Olusma Noktasi: ");       // DEBUGGING
@@ -131,11 +109,24 @@ void loop()
   //////////////////
   //  WIND SENSOR //
   //////////////////
-  windSpeed = anemometer(REED);
-  dtostrf(windSpeed,6,2,outstr4);
-  String strFive = outstr4;
-  windSensorValue = strFive + ",";
-  //Serial.println(windSensorValue);
+  if (anemometerData[0] != 0)
+  {
+    unsigned long now = millis();
+    if (now - anemometerData[ANEMOMETER_DATA_COUNT - 1] < 1000)
+    {
+      unsigned long passedTimes = now - anemometerData[0];
+      windSpeed = ((passedTimes/1000)/3600)*((110/100)/1000);
+      dtostrf(windSpeed,4,2,outstr);
+      tempStr = outstr;
+      pressureSensorValue = tempStr + ",";
+      //Serial.println(x);
+    }
+    else
+    {
+      windSensorValue = "0,";
+    }
+  }
+  //Serial.println(windSensorValue);      // DEBUGGING
 
   //////////////////////
   //  PRESSURE SENSOR //
@@ -206,9 +197,9 @@ void loop()
     }
   }*/
   float pressure_tester = 1.00;
-  dtostrf(pressure_tester,4,2,outstr5);
-  String strSix = outstr5;
-  pressureSensorValue = strSix + ",";
+  dtostrf(pressure_tester,4,2,outstr);
+  tempStr = outstr;
+  pressureSensorValue = tempStr + ",";
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
@@ -246,65 +237,14 @@ void loop()
   delay(1000);
 }
 
-float anemometer(int anemometer_input_pin)
+////////////////////////////
+//  WIND SENSOR FUNCTION  //
+////////////////////////////
+// by MucarTheEngineer
+void onInterrupt()
 {
-  long int b = millis();
-  int a = 0;
-  int d = 0;
-  int count = 0;
-  float speedwind = 0;
-  int i = 0;
-  float totalspeed = 0;
-  float velocity[100];
-  while(1)
-  {
-    d = a;
-    long int c = millis();
-
-    if((c - b) >= 10000)
-    {
-      //Serial.println("*******");
-      //Serial.println("Total count");
-      //Serial.println(count);
-
-      for (int j = 2; j <= count; j++)
-      {
-        totalspeed = totalspeed + velocity[j];
-      }
-
-      speedwind = (totalspeed/(count-1));
-      //Serial.println(speedwind);
-      delay(5000);
-      //break;
-    }
-
-    else
-    {
-      a = digitalRead(REED);
-
-      if(a == 1)
-      {
-        if(d == 0)
-        {
-          new_time = millis();
-          count = count + 1;
-          //Serial.println(count);
-          time_span = new_time - previous_time;
-          previous_time = new_time;
-          //Serial.println(time_span);
-          velocity[count] = (16049.96/time_span);
-          //Serial.println(velocity[count]);
-        }
-
-        else if (d == 1)
-        {
-          count = count;
-        }
-      }
-    }
-  }
-  //float x = ((float)speedwind,2);
-  //speedwind = x;
-  return speedwind;
-  Serial.println(speedwind);
+  unsigned long newData = millis();
+  for (int i = 1; i < ANEMOMETER_DATA_COUNT; i++)
+    anemometerData[i - 1] = anemometerData[i];
+  anemometerData[ANEMOMETER_DATA_COUNT - 1] = newData;
 }
