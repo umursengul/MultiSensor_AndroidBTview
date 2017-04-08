@@ -28,9 +28,12 @@ unsigned long anemometerData[ANEMOMETER_DATA_COUNT] = { 0 };
 void onInterrupt();
 static char outstr[15];
 String tempStr;
+String humStr;
+String dewStr;
 String temperatureSensorValue;
 String pressureSensorValue;
 String humiditySensorValue;
+String dewSensorValue;
 String lightSensorValue;
 String windSensorValue;
 String rainSensorValue;
@@ -74,22 +77,21 @@ void loop()
   int chk = DHT11.read(DHT11PIN); // Sensor check - should be 0
 
   // Temperature in Celcius:
-  //Serial.print("Sicaklik (Celcius): ");       // DEBUGGING
   float x = DHT11.temperature;
   dtostrf(x,4,2,outstr);
-  tempStr = outstr;
-  temperatureSensorValue = tempStr + ",";
+  //temperatureSensorValue = outstr + ",";      //DENE
+  humStr = outstr;
+  temperatureSensorValue = humStr + ",";
+
 
   // Temperature in Fahrenheit:
   /*
-  Serial.print("Sicaklik (Fahrenheit): ");    // DEBUGGING
   Serial.print(DHT11.fahrenheit(), 2);        // DEBUGGING
   Serial.print(",");                          // DEBUGGING
   */
 
   // Temperature in Kelvin:
   /*
-  Serial.print("Sicaklik (Kelvin): ");        // DEBUGGING
   Serial.print(DHT11.kelvin(), 2);            // DEBUGGING
   Serial.print(",");                          // DEBUGGING
   */
@@ -98,13 +100,16 @@ void loop()
   //Serial.print("Nem (%): ");                  // DEBUGGING
   float y = DHT11.humidity;
   dtostrf(y,4,2,outstr);
-  tempStr = outstr;
-  humiditySensorValue = tempStr + ",";
+  humStr = outstr;
+  humiditySensorValue = humStr + ",";
 
   // Send dew point:
-  //Serial.print("Cig Olusma Noktasi: ");       // DEBUGGING
-  //Serial.println(DHT11.dewPoint(), 2);        // Send dew point
-  //Serial.print(",");
+  /*
+  float z = DHT11.dewPoint();
+  dtostrf(z,4,2,outstr);
+  dewStr = outstr;
+  dewSensorValue = dewStr + ",";
+  */
 
   //////////////////
   //  WIND SENSOR //
@@ -126,7 +131,6 @@ void loop()
       windSensorValue = "0,";
     }
   }
-  //Serial.println(windSensorValue);      // DEBUGGING
 
   //////////////////////
   //  PRESSURE SENSOR //
@@ -196,25 +200,21 @@ void loop()
       }
     }
   }*/
-  float pressure_tester = 1.00;
-  dtostrf(pressure_tester,4,2,outstr);
-  tempStr = outstr;
-  pressureSensorValue = tempStr + ",";
+  float pressure_tester = 1.00;         // DEBUGGING
+  dtostrf(pressure_tester,4,2,outstr);  // DEBUGGING
+  tempStr = outstr;                     // DEBUGGING
+  pressureSensorValue = tempStr + ",";  // DEBUGGING
+  
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
   if(digitalRead(rainSensor == HIGH))
   {
     rainSensorValue = "400,";
-    //Serial.print(rainSensorValue);
-    //Serial.print(400);
-    //Serial.print(",");
   }
   else if(digitalRead(rainSensor == LOW))
   {
     rainSensorValue = "500,";
-    //Serial.print(500);
-    //Serial.print(",");
   }
 
   ////////////////////
@@ -223,14 +223,10 @@ void loop()
   if(analogRead(lightSensor) >= 850)
   {
     lightSensorValue = "700,";
-    //Serial.print(700);
-    //Serial.println(",");
   }
   else if(analogRead(lightSensor) < 850)
   {
     lightSensorValue = "600,";
-    //Serial.print(600);
-    //Serial.println(",");
   }
   sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue + ";";
   Serial.println(sensorValues);
