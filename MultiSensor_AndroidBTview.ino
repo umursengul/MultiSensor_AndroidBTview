@@ -23,7 +23,7 @@ int lightSensor = A5;
 ////////////////////
 #define ANEMOMETER_DATA_COUNT 10
 #define ALTITUDE 938.0  // Average altitude of Ankara in meters
-float windSpeed = 0;
+float windSpeed = 0.0000;
 unsigned long anemometerData[ANEMOMETER_DATA_COUNT] = { 0 };
 void onInterrupt();
 static char outstr[15];
@@ -118,16 +118,21 @@ void loop()
     if (now - anemometerData[ANEMOMETER_DATA_COUNT - 1] < 1000)
     {
       unsigned long passedTimes = now - anemometerData[0];
-      windSpeed = ((passedTimes/1000)/3600)*((110/100)/1000);
-      dtostrf(windSpeed,4,2,outstr);
+      Serial.println(passedTimes);
+      windSpeed = ((passedTimes/1000)*(0.11));
+      windSpeed = 1 - windSpeed;
+      dtostrf(windSpeed,5,2,outstr);
       tempStr = outstr;
-      pressureSensorValue = tempStr + ",";
-      //Serial.println(x);
+      windSensorValue = tempStr + ",";
     }
     else
     {
-      windSensorValue = "0,";
+      windSensorValue = "R,";
     }
+  }
+  else
+  {
+    windSensorValue = "R,";
   }
 
   //////////////////////
@@ -198,10 +203,7 @@ void loop()
       }
     }
   }*/
-  float pressure_tester = 1.00;         // DEBUGGING
-  dtostrf(pressure_tester,4,2,outstr);  // DEBUGGING
-  tempStr = outstr;                     // DEBUGGING
-  pressureSensorValue = tempStr + ",";  // DEBUGGING
+  pressureSensorValue = "B,";  // DEBUGGING
 
   ///////////////////
   //  RAIN SENSOR  //
