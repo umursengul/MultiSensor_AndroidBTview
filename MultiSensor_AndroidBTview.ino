@@ -14,19 +14,21 @@
 //  SENSOR PINS   //
 ////////////////////
 #define DHT11PIN 4
-#define REED A4
+#define P_INT 2
 int rainSensor = 3;
 int lightSensor = A5;
-#define P_INT 2
 
 ////////////////////
 //  DEFINED VARs  //
 ////////////////////
-float windSpeed = 0;
 #define ANEMOMETER_DATA_COUNT 10
+#define ALTITUDE 938.0  // Average altitude of Ankara in meters
+float windSpeed = 0;
 unsigned long anemometerData[ANEMOMETER_DATA_COUNT] = { 0 };
 void onInterrupt();
 static char outstr[15];
+dht11 DHT11;
+SFE_BMP180 pressure;
 String tempStr;
 String humStr;
 String dewStr;
@@ -38,10 +40,6 @@ String lightSensorValue;
 String windSensorValue;
 String rainSensorValue;
 String sensorValues;
-dht11 DHT11;
-SFE_BMP180 pressure;
-#define ALTITUDE 938.0  // Average altitude of Ankara in meters
-
 
 void setup()
 {
@@ -204,7 +202,7 @@ void loop()
   dtostrf(pressure_tester,4,2,outstr);  // DEBUGGING
   tempStr = outstr;                     // DEBUGGING
   pressureSensorValue = tempStr + ",";  // DEBUGGING
-  
+
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
