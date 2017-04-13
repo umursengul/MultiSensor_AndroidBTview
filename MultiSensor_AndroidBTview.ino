@@ -118,21 +118,30 @@ void loop()
     if (now - anemometerData[ANEMOMETER_DATA_COUNT - 1] < 1000)
     {
       unsigned long passedTimes = now - anemometerData[0];
-      Serial.println(passedTimes);
       windSpeed = ((passedTimes/1000)*(0.11));
-      windSpeed = 1 - windSpeed;
+      windSpeed = abs(1 - windSpeed);
+
+      if (windSpeed >= 1 && windSpeed < 5)
+      {
+        windSpeed = windSpeed * 5;
+      }
+      else if (windSpeed > 8)
+      {
+        windSpeed = windSpeed;
+      }
+
       dtostrf(windSpeed,5,2,outstr);
       tempStr = outstr;
       windSensorValue = tempStr + ",";
     }
     else
     {
-      windSensorValue = "R,";
+      windSensorValue = "0,";
     }
   }
   else
   {
-    windSensorValue = "R,";
+    windSensorValue = "0,";
   }
 
   //////////////////////
@@ -203,11 +212,12 @@ void loop()
       }
     }
   }*/
-  pressureSensorValue = "B,";  // DEBUGGING
+  pressureSensorValue = "1000,";  // DEBUGGING
 
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
+  // Problem!
   if(digitalRead(rainSensor == HIGH))
   {
     rainSensorValue = "400,";
@@ -220,6 +230,7 @@ void loop()
   ////////////////////
   //  LIGHT SENSOR  //
   ////////////////////
+  // Analog'a cevir!
   if(analogRead(lightSensor) >= 850)
   {
     lightSensorValue = "700,";
@@ -228,7 +239,8 @@ void loop()
   {
     lightSensorValue = "600,";
   }
-  sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue + ";";
+  //sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue + ";";
+  sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue;
   Serial.println(sensorValues);
   delay(1000);
 }
