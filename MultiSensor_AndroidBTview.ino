@@ -1,5 +1,7 @@
 /********************************************************/
 /*              Multisensor Remote Sensing              */
+/*  By: Umur Ozhan SENGUL                               */
+/*  Under GPLv3                                         */
 /********************************************************/
 
 //////////////////
@@ -10,28 +12,30 @@
 #include <Wire.h>
 #include <stdlib.h>
 
-////////////////////
-//  SENSOR PINS   //
-////////////////////
+////////////////////////
+//  PERIPHERAL PINS   //
+////////////////////////
 #define DHT11PIN 4
 #define P_INT 2
-int rainSensor = 3;
-int lightSensor = A5;
+int rainSensorPin = A2;
+int lightSensorPin = A3;
 
 ////////////////////
 //  DEFINED VARs  //
 ////////////////////
 #define ANEMOMETER_DATA_COUNT 10
-#define ALTITUDE 938.0  // Average altitude of Ankara in meters
+#define ALTITUDE 938.0            // Average altitude of Ankara in meters
 float windSpeed = 0.0000;
+float temp = 0.0000;
+float humid = 0.0000;
+int rainSensor;
+int lightSensor;
 unsigned long anemometerData[ANEMOMETER_DATA_COUNT] = { 0 };
 void onInterrupt();
-static char outstr[15];
+static char outstr[15];         // Temporary String 1
 dht11 DHT11;
 SFE_BMP180 pressure;
-String tempStr;
-String humStr;
-String dewStr;
+String tempStr;                 // Temporary String 2
 String temperatureSensorValue;
 String pressureSensorValue;
 String humiditySensorValue;
@@ -52,7 +56,7 @@ void setup()
   //////////////////
   //  BMP180 INIT //
   //////////////////
-  //pressure.begin();
+  pressure.begin();
 
   ////////////////////////
   //  WIND SENSOR INIT  //
@@ -64,7 +68,9 @@ void setup()
   ////////////////////
   //  SERIAL COMM   //
   ////////////////////
+  // Initialize serial communications
   Serial.begin(9600);
+
 }
 
 void loop()
@@ -75,11 +81,10 @@ void loop()
   int chk = DHT11.read(DHT11PIN); // Sensor check - should be 0
 
   // Temperature in Celcius:
-  float x = DHT11.temperature;
-  dtostrf(x,4,2,outstr);
-  //temperatureSensorValue = outstr + ",";      //DENE
-  humStr = outstr;
-  temperatureSensorValue = humStr + ",";
+  temp = DHT11.temperature;
+  dtostrf(temp,4,2,outstr);
+  tempStr = outstr;
+  temperatureSensorValue = tempStr + ",";
 
 
   // Temperature in Fahrenheit:
@@ -96,10 +101,10 @@ void loop()
 
   // Send humidity:
   //Serial.print("Nem (%): ");                  // DEBUGGING
-  float y = DHT11.humidity;
-  dtostrf(y,4,2,outstr);
-  humStr = outstr;
-  humiditySensorValue = humStr + ",";
+  humid = DHT11.humidity;
+  dtostrf(humid,4,2,outstr);
+  tempStr = outstr;
+  humiditySensorValue = tempStr + ",";
 
   // Send dew point:
   /*
@@ -118,18 +123,7 @@ void loop()
     if (now - anemometerData[ANEMOMETER_DATA_COUNT - 1] < 1000)
     {
       unsigned long passedTimes = now - anemometerData[0];
-      windSpeed = ((passedTimes/1000)*(0.11));
-      windSpeed = abs(1 - windSpeed);
-
-      if (windSpeed >= 1 && windSpeed < 5)
-      {
-        windSpeed = windSpeed * 5;
-      }
-      else if (windSpeed > 8)
-      {
-        windSpeed = windSpeed;
-      }
-
+      windSpeed = ((10000/passedTimes)*(0.11));
       dtostrf(windSpeed,5,2,outstr);
       tempStr = outstr;
       windSensorValue = tempStr + ",";
@@ -147,7 +141,6 @@ void loop()
   //////////////////////
   //  PRESSURE SENSOR //
   //////////////////////
-  /*
   char status;
   double T,P,p0,a;
   status = pressure.startTemperature();
@@ -160,14 +153,6 @@ void loop()
     status = pressure.getTemperature(T);
     if (status != 0)
     {
-      // DEBUGGING
-      // Print out temperature measurement from BMP180:
-      //Serial.print("temperature: ");
-      //Serial.print(T,2);
-      //Serial.print(" deg C, ");
-      //Serial.print((9.0/5.0)*T+32.0,2);
-      //Serial.println(" deg F");
-
       // Pressure measurement:
       status = pressure.startPressure(3);
       if (status != 0)
@@ -179,67 +164,46 @@ void loop()
         status = pressure.getPressure(P,T);
         if (status != 0)
         {
-          // DEBUGGING
-          // Print out pressure measurement from BMP180:
-          //Serial.print("absolute pressure: ");
-          //Serial.print(P,2);
-          //Serial.print(" mb, ");
-          //Serial.print(P*0.0295333727,2);
-          //Serial.println(" inHg");
-
-
           // Relative sea-level pressure:
           p0 = pressure.sealevel(P,ALTITUDE);
           //Serial.print("relative (sea-level) pressure: ");  // DEBUGGING
           dtostrf(p0,6,2,outstr);                           // Pressure in mb
-          //float x = p0,2;
-          String strOne = outstr;
-          String strTwo = ",";
-          String pressureSensorValue = strOne + strTwo;
-
-          //Serial.print(" mb, ");                            // DEBUGGING
-          //Serial.print(p0*0.0295333727,2);                  // DEBUGGING
-          //Serial.println(" inHg");                          // DEBUGGING
-
-          // DEBUGGING
-          // Altitude from pressure:
-          //a = pressure.altitude(P,p0);
-          //Serial.print("computed altitude: ");
-          //Serial.print(a,0);
-          //Serial.print(" meters, ");
-
+          tempStr = outstr;
+          pressureSensorValue = tempStr + ",";
         }
       }
     }
-  }*/
-  pressureSensorValue = "1000,";  // DEBUGGING
+  }
 
   ///////////////////
   //  RAIN SENSOR  //
   ///////////////////
-  // Problem!
-  if(digitalRead(rainSensor == HIGH))
+  rainSensor = analogRead(A2);
+  int rainSensorRange = map(rainSensor, 0, 1024, 0, 3);
+  switch (rainSensorRange)
   {
-    rainSensorValue = "400,";
-  }
-  else if(digitalRead(rainSensor == LOW))
-  {
-    rainSensorValue = "500,";
+    case 0:
+      rainSensorValue = "0,";
+      break;
+    case 1:
+      rainSensorValue = "1,";
+      break;
+    case 2:
+      rainSensorValue = "2,";
+      break;
   }
 
   ////////////////////
   //  LIGHT SENSOR  //
   ////////////////////
-  // Analog'a cevir!
-  if(analogRead(lightSensor) >= 850)
-  {
-    lightSensorValue = "700,";
-  }
-  else if(analogRead(lightSensor) < 850)
-  {
-    lightSensorValue = "600,";
-  }
-  //sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue + ";";
+  int letThereBeLight = analogRead(lightSensorPin);
+  dtostrf(letThereBeLight,6,2,outstr);
+  tempStr = outstr;
+  lightSensorValue = tempStr + ",";
+
+  ////////////////////////
+  //  BT SERIAL OUTPUT  //
+  ////////////////////////
   sensorValues = temperatureSensorValue + humiditySensorValue + pressureSensorValue + windSensorValue + rainSensorValue + lightSensorValue;
   Serial.println(sensorValues);
   delay(1000);
